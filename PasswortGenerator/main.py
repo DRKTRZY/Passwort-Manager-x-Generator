@@ -71,7 +71,8 @@ def copy_entry():
 
 # Buttons etc
 password_entry = tk.Entry(window,textvariable=empty_entry,width=30)
-password_entry.place(x=150,y=150,width=400,height=35)
+password_entry.place(relx=.5,rely=.5,anchor=tk.CENTER)
+
 generate_button = tk.Button(window,text="Generate",command=randomPassword)
 generate_button.place(x=210,y=100,width=300,height=30)
 slider = tk.Scale(window, from_=12, to=60,variable=length)
@@ -82,5 +83,6 @@ upper_box = ttk.Checkbutton(window,text="Grossbuchstaben",variable=upper_charact
 lower_box = ttk.Checkbutton(window,text="Kleinbuchstaben",variable=lower_characters,onvalue=1,offvalue=0).pack()
 copy_button = tk.Button(window,text="Kopieren",command=copy_entry)
 copy_button.place(x=300,y=200)
+
 
 window.mainloop()
