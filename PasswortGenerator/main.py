@@ -84,5 +84,7 @@ lower_box = ttk.Checkbutton(window,text="Kleinbuchstaben",variable=lower_charact
 copy_button = tk.Button(window,text="Kopieren",command=copy_entry)
 copy_button.place(x=300,y=200)
 
+lbl = tk.Label(window, text ="Tipp:  Je mehr Sie auswählen, desto sicherer ist das Passwort",bg="#424242")
+lbl.pack()
 
 window.mainloop()
