@@ -1,10 +1,29 @@
+# Delete "password_db.db" for a new master password
+# Master password is actually "hacked"
 import sqlite3, hashlib
 import tkinter as tk
 
+# Database
+with sqlite3.connect("password_db.db") as db:
+    cursor = db.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS masterpassword(
+id INTEGER PRIMARY KEY,
+password TEXT NOT NULL);
+""")
+
+# Window
 window = tk.Tk()
 
 window.title("Password Manager")
 window.geometry("500x400")
+
+# Functions etc
+def hash_password(input):
+    hash = hashlib.md5(input)
+    hash = hash.hexdigest()
+    return hash
 
 def first_screen():
     window.geometry("350x300")
@@ -29,14 +48,20 @@ def first_screen():
 
     def save_password():
         if entry.get() == re_enter.get():
+            hashed_password = hash_password(entry.get().encode('utf-8'))
             error_lbl.config(text="")
-            pass
+            insert_password = """INSERT INTO masterpassword(password)
+            VALUES(?) """
+            cursor.execute(insert_password, [(hashed_password)])
+            db.commit()
+            password_vault()
         else:
             error_lbl.config(text="Passwörter stimmen nicht mit einander ein")
 
-    btn = tk.Button(window,width=10,text="Save",command=save_password)
+    btn = tk.Button(window,width=10,text="Save",command=save_password) # Button for First Screen
     btn.pack(pady=10)
 
+# Login Screen
 def login_screen():
     window.geometry("350x300")
 
@@ -51,9 +76,15 @@ def login_screen():
     entry.pack()
     entry.focus()
 
+    def get_master_password():
+        check_hashed_password = hash_password(entry.get().encode('utf-8'))
+        cursor.execute("SELECT * FROM masterpassword WHERE id = 1 AND password = ?", [(check_hashed_password)])
+        return cursor.fetchall()
+
     def check_password():
-        password = "hey"
-        if password == entry.get():
+        match = get_master_password()
+
+        if match:
             password_vault()
         else:
             entry.delete(0, 'end')
@@ -67,7 +98,13 @@ def password_vault():
         widget.destroy()
     window.geometry("700x300")
 
-    correct_lbl = tk.Label(window,text="Passwort ist korrekt",anchor=tk.CENTER)
+    correct_lbl = tk.Label(window,text="Passwort Manager",anchor=tk.CENTER)
     correct_lbl.pack()
-first_screen()
+
+check = cursor.execute("SELECT * FROM masterpassword") # if u have a master password it goes to the login screen
+if cursor.fetchall():
+    login_screen()
+else:
+    first_screen()
+
 window.mainloop()
