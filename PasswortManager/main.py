@@ -1,5 +1,5 @@
 # Delete "password_db.db" for a new master password
-# Master password is actually "hacked"
+# Master password is currently "hacked"
 import sqlite3, hashlib
 import tkinter as tk
 
