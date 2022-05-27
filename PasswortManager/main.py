@@ -1,9 +1,18 @@
 # Delete "password_db.db" for a new master password it also delete the entry's
 # Master password is currently "hacked"
+# Recovery Key is currently "a7fd28da94654a07ad31f3c1ed243a58" <- if you get a new key please change it here too
 import sqlite3, hashlib
 import tkinter as tk
 from tkinter import simpledialog
 from functools import partial
+import uuid
+import pyperclip
+import base64
+import os
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.backends import default_backend
+from cryptography.fernet import Fernet
 
 # Database
 with sqlite3.connect("password_db.db") as db:
@@ -12,7 +21,8 @@ with sqlite3.connect("password_db.db") as db:
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS masterpassword(
 id INTEGER PRIMARY KEY,
-password TEXT NOT NULL);
+password TEXT NOT NULL,
+recovery_key TEXT NOT NULL);
 """)
 
 cursor.execute("""
@@ -27,7 +37,6 @@ password TEXT NOT NULL);
 # Popup
 def popup(text):
     answer = simpledialog.askstring("input string", text)
-
     return answer
 
 # Window
@@ -38,11 +47,14 @@ window.geometry("500x400")
 
 # Functions etc
 def hash_password(input):
-    hash = hashlib.md5(input)
+    hash = hashlib.sha256(input)
     hash = hash.hexdigest()
     return hash
 
 def first_screen():
+    for widget in window.winfo_children():
+        widget.destroy()
+
     window.geometry("350x300")
 
     mstr_pswrd = tk.Label(window, pady=10, text="Erstelle ein Master Passwort")
@@ -65,21 +77,88 @@ def first_screen():
 
     def save_password():
         if entry.get() == re_enter.get():
+            sql = "DELETE FROM masterpassword WHERE id = 1"
+            cursor.execute(sql)
+
             hashed_password = hash_password(entry.get().encode('utf-8'))
-            error_lbl.config(text="")
-            insert_password = """INSERT INTO masterpassword(password)
-            VALUES(?) """
-            cursor.execute(insert_password, [(hashed_password)])
+            key = str(uuid.uuid4().hex) # Create a random Recovery Key
+            recovery_key = hash_password(key.encode('utf-8'))
+
+            insert_password = """INSERT INTO masterpassword(password, recovery_key)
+            VALUES(?, ?) """
+            cursor.execute(insert_password, ((hashed_password),(recovery_key)))
             db.commit()
-            password_vault()
+            error_lbl.config(text="")
+            recovery_screen(key)
         else:
             error_lbl.config(text="Passwörter stimmen nicht mit einander ein")
 
     btn = tk.Button(window,width=10,text="Save",command=save_password) # Button for First Screen
     btn.pack(pady=10)
 
-# Login Screen
+# Login Screen & Recovery Screen
+def recovery_screen(key):
+    for widget in window.winfo_children():
+        widget.destroy()
+
+    window.geometry("350x300")
+
+    mstr_pswrd = tk.Label(window, pady=10, text="Speichere diesen Recovery Key")
+    mstr_pswrd.config(anchor=tk.CENTER)
+    mstr_pswrd.pack()
+
+    key_lbl = tk.Label(window, pady=10, text=key)
+    key_lbl.pack()
+
+    def copy_key():
+        pyperclip.copy(key_lbl.cget("text"))
+
+    copy_btn = tk.Button(window, width=10, text="Copy", command=copy_key)  # Button for First Screen
+    copy_btn.pack(pady=10)
+
+    def done():
+        password_vault()
+
+    done_btn = tk.Button(window, width=10, text="Done", command=done)  # Button for First Screen
+    done_btn.pack(pady=10)
+
+def reset_screen():
+    for widget in window.winfo_children():
+        widget.destroy()
+
+    window.geometry("350x300")
+
+    mstr_pswrd = tk.Label(window, pady=10, text="Gib den Recovery Key ein")
+    mstr_pswrd.config(anchor=tk.CENTER)
+    mstr_pswrd.pack()
+
+    recovery_entry = tk.Entry(window, width=20, show="*")
+    recovery_entry.pack()
+    recovery_entry.focus()
+
+    key_lbl = tk.Label(window)
+    key_lbl.pack()
+
+    def get_recovery_key():
+        recovery_key_check = hash_password(str(recovery_entry.get()).encode('utf-8'))
+        cursor.execute('SELECT * FROM masterpassword WHERE id = 1 AND recovery_key = ?',[(recovery_key_check)])
+        return cursor.fetchall()
+
+    def check_recovery_key():
+        checked = get_recovery_key()
+        if checked:
+            first_screen()
+        else:
+            recovery_entry.delete(0, 'end')
+            key_lbl.config(text="Falscher Key")
+
+    check_btn = tk.Button(window, width=10, text="Check Key", command=check_recovery_key)  # Button for First Screen
+    check_btn.pack(pady=10)
+
 def login_screen():
+    for widget in window.winfo_children():
+        widget.destroy()
+
     window.geometry("350x300")
 
     lbl = tk.Label(window,pady=10,text="Geben sie das Master password ein")
@@ -107,8 +186,15 @@ def login_screen():
             entry.delete(0, 'end')
             error_lbl.config(text="Falsches Passwort")
 
+    def reset_password():
+        reset_screen()
+
     btn = tk.Button(window,width=10,text="Enter",command=check_password)
     btn.pack(pady=10)
+
+    reset_btn = tk.Button(window,width=24,text="Masterpasswort zurücksetzen",command=reset_password)
+    reset_btn.pack(pady=10)
+
 
 def password_vault():
     for widget in window.winfo_children():
