@@ -1,6 +1,6 @@
 # Delete "password_db.db" for a new master password it also delete the entry's
 # Master password is currently "hacked"
-# Recovery Key is currently "a7fd28da94654a07ad31f3c1ed243a58" <- if you get a new key please change it here too
+# Recovery Key is currently "18d9a5e5a728440192a409fc7604f6ec" <- if you get a new key please change it here too
 import sqlite3, hashlib
 import tkinter as tk
 from tkinter import simpledialog
@@ -13,6 +13,27 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
 from cryptography.fernet import Fernet
+
+backend = default_backend()
+salt = b'5444'
+
+kdf = PBKDF2HMAC(
+    algorithm=hashes.SHA256(),
+    length=32,
+    salt=salt,
+    iterations=100000,
+    backend=backend
+)
+
+encryptionKey = 10
+
+def encrypt(message: bytes, key: bytes) -> bytes:
+    return Fernet(key).encrypt(message)
+
+def decrypt(message: bytes, token: bytes) -> bytes:
+    return Fernet(token).decrypt(message)
+
+
 
 # Database
 with sqlite3.connect("password_db.db") as db:
@@ -83,6 +104,9 @@ def first_screen():
             hashed_password = hash_password(entry.get().encode('utf-8'))
             key = str(uuid.uuid4().hex) # Create a random Recovery Key
             recovery_key = hash_password(key.encode('utf-8'))
+
+            global encryptionKey
+            encryptionKey = base64.urlsafe_b64encode(kdf.derive(entry.get().encode()))
 
             insert_password = """INSERT INTO masterpassword(password, recovery_key)
             VALUES(?, ?) """
@@ -174,7 +198,10 @@ def login_screen():
 
     def get_master_password():
         check_hashed_password = hash_password(entry.get().encode('utf-8'))
+        global encryptionKey
+        encryptionKey = base64.urlsafe_b64encode(kdf.derive(entry.get().encode()))
         cursor.execute("SELECT * FROM masterpassword WHERE id = 1 AND password = ?", [(check_hashed_password)])
+
         return cursor.fetchall()
 
     def check_password():
@@ -206,9 +233,9 @@ def password_vault():
         txt_username = "Username"
         txt_password = "Password"
 
-        website = popup(txt_website)
-        username = popup(txt_username)
-        password = popup(txt_password)
+        website = encrypt(popup(txt_website).encode(), encryptionKey)
+        username = encrypt(popup(txt_username).encode(), encryptionKey)
+        password = encrypt(popup(txt_password).encode(), encryptionKey)
 
         insert_fields = """INSERT INTO vault(website,username,password)
         VALUES(?, ?, ?)"""
@@ -243,13 +270,14 @@ def password_vault():
     if (cursor.fetchall() != None):
         i = 0
         while True:
+
             cursor.execute("SELECT * FROM vault")
             array = cursor.fetchall()
-            array_lbl = tk.Label(window, text=(array[i][1]), font=("Bahnschrift, 12"))
+            array_lbl = tk.Label(window, text=(decrypt(array[i][1],encryptionKey)), font=("Bahnschrift, 12"))
             array_lbl.grid(column=0, row=i+3)
-            array_lbl = tk.Label(window, text=(array[i][2]), font=("Bahnschrift, 12"))
+            array_lbl = tk.Label(window, text=(decrypt(array[i][2],encryptionKey)), font=("Bahnschrift, 12"))
             array_lbl.grid(column=1, row=i + 3)
-            array_lbl = tk.Label(window, text=(array[i][3]), font=("Bahnschrift, 12"))
+            array_lbl = tk.Label(window, text=(decrypt(array[i][2],encryptionKey)), font=("Bahnschrift, 12"))
             array_lbl.grid(column=2, row=i + 3)
 
             delete_btn = tk.Button(window,text="Löschen",command= partial(remove_entry,array[i][0]))
