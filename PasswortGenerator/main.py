@@ -10,7 +10,7 @@ window = tk.Tk()
 window.geometry("800x450")
 window.title("Passwort Generator")
 window.resizable(0,0)
-window.configure(bg="#424242")
+window.configure(bg="#111827")
 
 empty_entry = tk.StringVar()
 length = tk.IntVar()
@@ -70,21 +70,31 @@ def copy_entry():
     pyperclip.copy(copy_title)
 
 # Buttons etc
-password_entry = tk.Entry(window,textvariable=empty_entry,width=30)
+password_entry = tk.Entry(window,textvariable=empty_entry,width=30,bg="#1f2937",fg="#818cf8")
 password_entry.place(relx=.5,rely=.5,anchor=tk.CENTER)
 
-generate_button = tk.Button(window,text="Generate",command=randomPassword)
-generate_button.place(x=210,y=100,width=300,height=30)
-slider = tk.Scale(window, from_=12, to=60,variable=length)
+generate_button = tk.Button(window,text="Generate",command=randomPassword,bg="#1f2937",fg="#818cf8")
+generate_button.place(relx=.5,rely=.6,width=300,height=30, anchor=tk.CENTER)
+slider = tk.Scale(window, from_=12, to=60,variable=length,bg="#1f2937",fg="#818cf8")
 slider.place(x=600,y=100)
-symbol_box = ttk.Checkbutton(window,text="Sonderzeichen",variable=symbol_characters,onvalue=1,offvalue=0).pack()
-digit_box = ttk.Checkbutton(window,text="Ziffern",variable=digit_characters,onvalue=1,offvalue=0).pack()
-upper_box = ttk.Checkbutton(window,text="Grossbuchstaben",variable=upper_characters,onvalue=1,offvalue=0).pack()
-lower_box = ttk.Checkbutton(window,text="Kleinbuchstaben",variable=lower_characters,onvalue=1,offvalue=0).pack()
-copy_button = tk.Button(window,text="Kopieren",command=copy_entry)
-copy_button.place(x=300,y=200)
 
-lbl = tk.Label(window, text ="Tipp:  Je mehr Sie auswählen, desto sicherer ist das Passwort",bg="#424242")
+style = ttk.Style()
+style.configure("Red.TCheckbutton",selectcolor="red")
+
+symbol_box = tk.Checkbutton(window,text="Sonderzeichen__",variable=symbol_characters,onvalue=1,offvalue=0,bg="#111827",fg="#818cf8")
+symbol_box.place(x=400,rely=.4,anchor=tk.CENTER)
+digit_box = tk.Checkbutton(window,text="Ziffern",variable=digit_characters,onvalue=1,offvalue=0,bg="#111827",fg="#818cf8")
+digit_box.place(x=400,rely=.3,anchor=tk.CENTER)
+upper_box = tk.Checkbutton(window,text="Grossbuchstaben",variable=upper_characters,onvalue=1,offvalue=0,bg="#111827",fg="#818cf8")
+upper_box.place(x=400,rely=.2,anchor=tk.CENTER)
+lower_box = tk.Checkbutton(window,text="Kleinbuchstaben",variable=lower_characters,onvalue=1,offvalue=0,bg="#111827",fg="#818cf8")
+lower_box.place(x=400,rely=.1,anchor=tk.CENTER)
+
+
+copy_button = tk.Button(window,text="Kopieren",command=copy_entry,bg="#1f2937",fg="#818cf8")
+copy_button.place(relx=.5,rely=.7,anchor=tk.CENTER)
+
+lbl = tk.Label(window, text ="Tipp:  Je mehr Sie auswählen, desto sicherer ist das Passwort",bg="#111827",fg="#818cf8")
 lbl.pack()
 
 window.mainloop()

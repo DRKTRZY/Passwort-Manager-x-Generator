@@ -277,7 +277,7 @@ def password_vault():
             array_lbl.grid(column=0, row=i+3)
             array_lbl = tk.Label(window, text=(decrypt(array[i][2],encryptionKey)), font=("Bahnschrift, 12"))
             array_lbl.grid(column=1, row=i + 3)
-            array_lbl = tk.Label(window, text=(decrypt(array[i][2],encryptionKey)), font=("Bahnschrift, 12"))
+            array_lbl = tk.Label(window, text=(decrypt(array[i][3],encryptionKey)), font=("Bahnschrift, 12"))
             array_lbl.grid(column=2, row=i + 3)
 
             delete_btn = tk.Button(window,text="Löschen",command= partial(remove_entry,array[i][0]))
