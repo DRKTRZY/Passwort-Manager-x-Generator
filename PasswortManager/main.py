@@ -1,6 +1,6 @@
 # Delete "password_db.db" for a new master password it also delete the entry's
 # Master password is currently "hacked"
-# Recovery Key is currently "552b3c0ca4fd47c1afeb29636ed43f69" <- if you get a new key please change it here too
+# Recovery Key is currently "2f2f975de1db460091fb2af66c1fbb3d" <- if you get a new key please change it here too
 import sqlite3, hashlib
 import tkinter as tk
 from tkinter import simpledialog
@@ -218,34 +218,28 @@ def login_screen():
 
     def get_keyfile():
         kf_filepath = filedialog.askopenfilename()
-        print(kf_filepath)
         file = open(kf_filepath, "r")
         fileread = file.readline()
         cursor.execute('SELECT * FROM masterpassword WHERE id = 1 AND keyfile = ?', [(fileread)])
-        print(fileread)
+
+        return cursor.fetchall
 
     def check_password():
         match = get_master_password()
         correct = get_keyfile()
 
-        if match:
+        if match and correct:
             password_vault()
         else:
             entry.delete(0, 'end')
             error_lbl.config(text="Falsches Passwort")
 
-        if correct:
-            print("acces")
-        else:
-            print("denied")
+
     def reset_password():
         reset_screen()
 
     btn = tk.Button(window,width=10,text="Enter",command=check_password)
     btn.pack(pady=10)
-
-    kf_btn = tk.Button(window, width=10, text="Keyfile", command=get_keyfile)
-    kf_btn.pack(pady=15)
 
     reset_btn = tk.Button(window,width=24,text="Masterpasswort zurücksetzen",command=reset_password)
     reset_btn.pack(pady=10)
