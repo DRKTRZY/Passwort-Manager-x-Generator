@@ -61,6 +61,7 @@ def randomPassword():
         signs = all
     else:
         messagebox.showerror("Error", "Sie müssen mindestens eine Option auswählen")
+        return
     generator = random.sample(signs,length.get())
     password = "".join(generator)
     empty_entry.set(password)
@@ -81,7 +82,7 @@ slider.place(x=600,y=100)
 style = ttk.Style()
 style.configure("Red.TCheckbutton",selectcolor="red")
 
-symbol_box = tk.Checkbutton(window,text="Sonderzeichen__",variable=symbol_characters,onvalue=1,offvalue=0,bg="#111827",fg="#818cf8")
+symbol_box = tk.Checkbutton(window,text="Sonderzeichen",variable=symbol_characters,onvalue=1,offvalue=0,bg="#111827",fg="#818cf8")
 symbol_box.place(x=400,rely=.4,anchor=tk.CENTER)
 digit_box = tk.Checkbutton(window,text="Ziffern",variable=digit_characters,onvalue=1,offvalue=0,bg="#111827",fg="#818cf8")
 digit_box.place(x=400,rely=.3,anchor=tk.CENTER)
