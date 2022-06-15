@@ -62,6 +62,7 @@ def randomPassword():
     else:
         messagebox.showerror("Error", "Sie müssen mindestens eine Option auswählen")
         return
+
     generator = random.sample(signs,length.get())
     password = "".join(generator)
     empty_entry.set(password)
@@ -90,7 +91,6 @@ upper_box = tk.Checkbutton(window,text="Grossbuchstaben",variable=upper_characte
 upper_box.place(x=400,rely=.2,anchor=tk.CENTER)
 lower_box = tk.Checkbutton(window,text="Kleinbuchstaben",variable=lower_characters,onvalue=1,offvalue=0,bg="#111827",fg="#818cf8")
 lower_box.place(x=400,rely=.1,anchor=tk.CENTER)
-
 
 copy_button = tk.Button(window,text="Kopieren",command=copy_entry,bg="#1f2937",fg="#818cf8")
 copy_button.place(relx=.5,rely=.7,anchor=tk.CENTER)

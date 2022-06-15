@@ -1,10 +1,11 @@
 # Delete "password_db.db" for a new master password it also delete the entry's
 # Master password is currently "hacked"
-# Recovery Key is currently "2f2f975de1db460091fb2af66c1fbb3d" <- if you get a new key please change it here too
+# Recovery Key is currently "13df0c67295d4835aa4b76c4d8b56f64" <- if you get a new key please change it here too
 import sqlite3, hashlib
 import tkinter as tk
 from tkinter import simpledialog
 from tkinter import filedialog
+from tkinter import messagebox
 from functools import partial
 import uuid
 import pyperclip
@@ -81,12 +82,13 @@ def first_screen():
         widget.destroy()
 
     window.geometry("350x300")
+    window.resizable(height=0,width=0)
 
     mstr_pswrd = tk.Label(window, pady=10, text="Erstelle ein Master Passwort")
     mstr_pswrd.config(anchor=tk.CENTER)
     mstr_pswrd.pack()
 
-    re_enter_lbl = tk.Label(window, pady=10, text="Geben sie das Passwort erneut ein")
+    re_enter_lbl = tk.Label(window, pady=15, text="Geben sie das Passwort erneut ein")
     re_enter_lbl.pack()
 
     error_lbl = tk.Label(window)
@@ -107,8 +109,11 @@ def first_screen():
 
             hashed_password = hash_password(entry.get().encode('utf-8'))
             key = str(uuid.uuid4().hex) # Create a random Recovery Key
-            keyfile = str(uuid.uuid4().hex)
             recovery_key = hash_password(key.encode('utf-8'))
+            keyfile = hash_password(key.encode('utf-8'))
+            messagebox.showwarning("Wichtig", "Sie müssen zu erst eine Keyfile erstellen drücken sie auf OK")
+            createpath = filedialog.asksaveasfile()
+            createpath.write(keyfile)
 
             global encryptionKey
             encryptionKey = base64.urlsafe_b64encode(kdf.derive(entry.get().encode()))
@@ -119,18 +124,12 @@ def first_screen():
             db.commit()
             error_lbl.config(text="")
             recovery_screen(key)
+
         else:
             error_lbl.config(text="Passwörter stimmen nicht mit einander ein")
 
-    def create_keyfile():
-        createpath = filedialog.asksaveasfile()
-        filetext = str(uuid.uuid4().hex)
-        createpath.write(filetext)
-
     btn = tk.Button(window,width=10,text="Save",command=save_password) # Button for First Screen
     btn.pack(pady=10)
-    kf_btn = tk.Button(window,text="Create Keyfile",command=create_keyfile)
-    kf_btn.pack()
 
 # Login Screen & Recovery Screen
 def recovery_screen(key):
@@ -197,7 +196,7 @@ def login_screen():
 
     window.geometry("350x300")
 
-    lbl = tk.Label(window,pady=10,text="Geben sie das Master password ein")
+    lbl = tk.Label(window,pady=10,text="Geben sie das Masterpasswort ein")
     lbl.config(anchor=tk.CENTER)
     lbl.pack()
 
@@ -220,9 +219,10 @@ def login_screen():
         kf_filepath = filedialog.askopenfilename()
         file = open(kf_filepath, "r")
         fileread = file.readline()
+        keyfile_check = hash_password(str(fileread).encode('utf-8'))
         cursor.execute('SELECT * FROM masterpassword WHERE id = 1 AND keyfile = ?', [(fileread)])
 
-        return cursor.fetchall
+        return cursor.fetchall()
 
     def check_password():
         match = get_master_password()
@@ -232,9 +232,7 @@ def login_screen():
             password_vault()
         else:
             entry.delete(0, 'end')
-            error_lbl.config(text="Falsches Passwort")
-
-
+            error_lbl.config(text="Passwort oder Keyfile sind nicht korrekt")
     def reset_password():
         reset_screen()
 
